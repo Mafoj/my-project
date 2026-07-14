@@ -1,0 +1,30 @@
+# /etc/systemd/system/pmo-pipeline.service
+[Unit]
+Description=ISQ PMO PM Pipeline (FastAPI)
+After=network.target
+
+[Service]
+Type=simple
+User=pmoapp
+Group=pmoapp
+WorkingDirectory=/opt/pmo-pipeline/backend
+
+# Secrets (Phase 2 Postgres DSN) live here -- root-owned, chmod 600. Never in git.
+EnvironmentFile=/etc/pmo-pipeline/pmo-pipeline.env
+
+ExecStart=/opt/pmo-pipeline/.venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 --port 8000 --workers 2
+Restart=on-failure
+RestartSec=5
+
+# Hardening. The app reads one Excel file and serves static assets; it has no
+# business writing anywhere or seeing the rest of the filesystem.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/pmo-pipeline
+ReadWritePaths=/opt/pmo-pipeline/data
+
+[Install]
+WantedBy=multi-user.target
