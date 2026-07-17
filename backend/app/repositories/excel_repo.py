@@ -66,14 +66,29 @@ ALLOC_MAP: dict[str, str] = {
 }
 
 
+def _find_header_row(rows: list[tuple[Any, ...]], col_map: dict[str, str]) -> int:
+    """Some sheets (e.g. the allocation export) prepend a banner row like
+    'DO NOT EDIT' before the real headers. Scan the first few rows and pick
+    the one that matches the most known columns, rather than assuming row 0.
+    """
+    best_i, best_matches = 0, -1
+    for i, row in enumerate(rows[:5]):
+        matches = sum(1 for h in row if (col_map.get(nk(h)) or col_map.get(nk(h).rstrip())))
+        if matches > best_matches:
+            best_i, best_matches = i, matches
+    return best_i
+
+
 def _parse_sheet(ws: Any, col_map: dict[str, str]) -> list[dict[str, Any]]:
-    """Python equivalent of parseSheet(): header row 0, map columns, drop blanks."""
+    """Python equivalent of parseSheet(): find the header row, map columns, drop blanks."""
     rows = list(ws.iter_rows(values_only=True))
     if len(rows) < 2:
         return []
 
+    header_i = _find_header_row(rows, col_map)
+
     idx: dict[str, int] = {}
-    for i, header in enumerate(rows[0]):
+    for i, header in enumerate(rows[header_i]):
         key = nk(header)
         field = col_map.get(key) or col_map.get(key.rstrip())
         if field and field not in idx:
@@ -84,7 +99,7 @@ def _parse_sheet(ws: Any, col_map: dict[str, str]) -> list[dict[str, Any]]:
         log.warning("Sheet %r: unmapped columns (will default): %s", ws.title, sorted(missing))
 
     out: list[dict[str, Any]] = []
-    for row in rows[1:]:
+    for row in rows[header_i + 1 :]:
         if not any(c not in (None, "") for c in row):
             continue
         rec: dict[str, Any] = {}
