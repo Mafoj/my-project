@@ -11,7 +11,9 @@ interface AllocFilters {
   projectStatus: string[];
   externality: string[];
 }
-const mkAllocFilters = (): AllocFilters => ({ tower: [], pmName: [], projectStatus: [], externality: [] });
+const mkAllocFilters = (): AllocFilters => ({
+  tower: [], pmName: [], projectStatus: ['Initiation', 'On Hold', 'Ongoing'], externality: [],
+});
 
 interface Props {
   allocations: Allocation[];

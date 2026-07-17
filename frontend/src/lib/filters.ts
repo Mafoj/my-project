@@ -24,7 +24,9 @@ export interface MainFilters {
 
 export const mkMainFilters = (): MainFilters => ({
   search: '', searchITS: '',
-  tower: [], pcOwnership: [], pmName: [], projectStatus: [], bu: [], intExt: [], bsoIo: [],
+  tower: [], pcOwnership: [], pmName: [],
+  projectStatus: ['Initiation', 'On Hold', 'Ongoing'],
+  bu: [], intExt: [], bsoIo: [],
   sy: '', ey: '', probBuckets: [],
 });
 
@@ -54,12 +56,27 @@ export function applyMainFilters(projects: Project[], f: MainFilters): Project[]
   });
 }
 
-/** Filter state persisted to localStorage under a per-tab key. */
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/**
+ * Persisted state backed by localStorage. Plain-object values (filter sets)
+ * are merged over the factory's defaults, so new fields added later still
+ * get a default; primitives (numbers, booleans) are used as-is -- spreading
+ * a primitive into an object literal silently produces `{}`, which is a
+ * NaN/truthy trap once you do math or comparisons on it.
+ */
 export function usePersistedState<T>(key: string, factory: () => T) {
   const [state, _set] = useState<T>(() => {
     try {
       const raw = localStorage.getItem(key);
-      return raw ? { ...factory(), ...JSON.parse(raw) } : factory();
+      if (!raw) return factory();
+      const parsed = JSON.parse(raw);
+      const base = factory();
+      if (isPlainObject(base) && isPlainObject(parsed)) return { ...base, ...parsed } as T;
+      // Type mismatch (e.g. a stale `{}` written by the old buggy merge logic
+      // for a primitive value) -- discard it rather than propagate garbage.
+      return typeof parsed === typeof base ? (parsed as T) : factory();
     } catch {
       return factory();
     }

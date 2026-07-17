@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  body { margin:0; background:#f7f8fa; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
+</style>
+</helmet>
+
+<section style="display:flex;flex-direction:column;gap:16px;padding:32px;align-items:flex-start">
+  <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+
+    <div id="1a" style="width:860px;background:#fff;border:1px solid {{cardTheme.border}};border-radius:10px;padding:20px 24px;box-shadow:0 1px 2px rgba(0,0,0,0.04)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:11px;font-weight:700;background:{{cardTheme.badgeBg}};color:#fff;padding:2px 8px;border-radius:10px">1a</span>
+        <span style="font-size:13px;color:#6b7280;font-weight:600">Sparkline strip per PM</span>
+      </div>
+      <div style="font-size:12px;letter-spacing:0.06em;color:{{cardTheme.titleColor}};font-weight:700;text-transform:uppercase;margin-bottom:14px">Timeline — 2026</div>
+
+      <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px;margin-bottom:6px">
+        <div></div>
+        <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;min-width:0">
+          <sc-for list="{{months}}" as="m" hint-placeholder-count="12">
+            <div style="font-size:11px;color:#9ca3af;text-align:left;font-weight:{{m.weight}};min-width:0;overflow:hidden">{{m.name}}</div>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-for list="{{pmsA}}" as="pm" hint-placeholder-count="3">
+        <div style="border-top:1px solid #f1f2f4;padding:10px 0;min-width:0">
+          <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px;align-items:center;cursor:pointer;min-width:0" onClick="{{pm.toggle}}">
+            <div style="display:flex;align-items:center;gap:6px;min-width:0">
+              <span style="display:inline-block;transform:rotate({{pm.rotate}});transition:transform .15s;color:#9ca3af;font-size:12px">▸</span>
+              <span style="font-weight:600;font-size:14px;color:#111827">{{pm.name}}</span>
+              <span style="font-size:13px;color:#9ca3af">({{pm.count}})</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1px;height:12px;border-radius:3px;overflow:hidden;min-width:0">
+              <sc-for list="{{pm.monthCells}}" as="cell" hint-placeholder-count="12">
+                <div style="background:{{cell.color}}"></div>
+              </sc-for>
+            </div>
+          </div>
+          <sc-if value="{{pm.expanded}}" hint-placeholder-val="{{false}}">
+            <sc-for list="{{pm.projects}}" as="proj" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px;align-items:center;padding:5px 0 5px 20px;min-width:0">
+                <div style="font-size:12px;color:{{proj.nameColor}};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{proj.name}}</div>
+                <sc-if value="{{proj.outside}}" hint-placeholder-val="{{false}}">
+                  <div style="font-size:11px;color:#c7cad1">outside 2026</div>
+                </sc-if>
+                <sc-if value="{{proj.hasBar}}" hint-placeholder-val="{{true}}">
+                  <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;min-width:0">
+                    <div style="grid-column:{{proj.gridColumn}};background:{{proj.barColor}};border-radius:4px;height:14px"></div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </sc-if>
+        </div>
+      </sc-for>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #f1f2f4">
+        <span style="font-size:11px;color:#9ca3af">Utilization</span>
+        <div style="display:flex;gap:2px">
+          <sc-for list="{{scaleSwatches}}" as="sw" hint-placeholder-count="5">
+            <div style="width:16px;height:8px;background:{{sw.color}}"></div>
+          </sc-for>
+        </div>
+        <span style="font-size:11px;color:#9ca3af">low → high, weighted by project status &amp; month</span>
+      </div>
+    </div>
+
+    <div id="1b" style="width:640px;background:{{cardTheme.bg}};border:1px solid {{cardTheme.border}};border-radius:10px;padding:20px 24px;box-shadow:0 1px 2px rgba(0,0,0,0.04)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:11px;font-weight:700;background:{{cardTheme.badgeBg}};color:#fff;padding:2px 8px;border-radius:10px">1b</span>
+        <span style="font-size:13px;color:#6b7280;font-weight:600">Single utilization badge (current month)</span>
+      </div>
+      <div style="font-size:12px;letter-spacing:0.06em;color:{{cardTheme.titleColor}};font-weight:700;text-transform:uppercase;margin-bottom:14px">Timeline — 2026</div>
+
+      <sc-for list="{{pmsB}}" as="pm" hint-placeholder-count="3">
+        <div style="border-top:1px solid #f1f2f4;padding:10px 0">
+          <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{pm.toggle}}">
+            <span style="display:inline-block;transform:rotate({{pm.rotate}});transition:transform .15s;color:#9ca3af;font-size:12px">▸</span>
+            <span style="font-weight:600;font-size:14px;color:#111827">{{pm.name}}</span>
+            <span style="font-size:13px;color:#9ca3af">({{pm.count}} projects)</span>
+            <span style="margin-left:auto;background:{{pm.avgColor}};color:{{pm.avgTextColor}};padding:4px 11px;border-radius:12px;font-size:12px;font-weight:600">{{pm.avgLabel}}</span>
+          </div>
+          <sc-if value="{{pm.expanded}}" hint-placeholder-val="{{false}}">
+            <sc-for list="{{pm.projects}}" as="proj" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:220px 1fr;gap:8px;align-items:center;padding:5px 0 5px 22px">
+                <div style="font-size:12px;color:{{proj.nameColor}};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{proj.name}}</div>
+                <sc-if value="{{proj.outside}}" hint-placeholder-val="{{false}}">
+                  <div style="font-size:11px;color:#c7cad1">outside 2026</div>
+                </sc-if>
+                <sc-if value="{{proj.hasBar}}" hint-placeholder-val="{{true}}">
+                  <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;min-width:0">
+                    <div style="grid-column:{{proj.gridColumn}};background:{{proj.barColor}};border-radius:4px;height:14px"></div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </sc-if>
+        </div>
+      </sc-for>
+
+      <div style="font-size:11px;color:#9ca3af;margin-top:14px;padding-top:12px;border-top:1px solid #f1f2f4">Badge reflects load in the current month (Jul), weighted so Ongoing counts more than On Hold/Initiation.</div>
+    </div>
+
+    <div id="1c" style="width:760px;background:{{cardTheme.bg}};border:1px solid {{cardTheme.border}};border-radius:10px;padding:20px 24px;box-shadow:0 1px 2px rgba(0,0,0,0.04)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:11px;font-weight:700;background:{{cardTheme.badgeBg}};color:#fff;padding:2px 8px;border-radius:10px">1c</span>
+        <span style="font-size:13px;color:#6b7280;font-weight:600">Badge + strip combined</span>
+      </div>
+      <div style="font-size:12px;letter-spacing:0.06em;color:{{cardTheme.titleColor}};font-weight:700;text-transform:uppercase;margin-bottom:14px">Timeline — 2026</div>
+
+      <sc-for list="{{pmsC}}" as="pm" hint-placeholder-count="3">
+        <div style="border-top:1px solid #f1f2f4;padding:10px 0">
+          <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{pm.toggle}}">
+            <span style="display:inline-block;transform:rotate({{pm.rotate}});transition:transform .15s;color:#9ca3af;font-size:12px">▸</span>
+            <span style="font-weight:600;font-size:14px;color:#111827">{{pm.name}}</span>
+            <span style="font-size:13px;color:#9ca3af">({{pm.count}})</span>
+            <span style="background:{{pm.avgColor}};color:{{pm.avgTextColor}};padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600">{{pm.avgLabel}}</span>
+            <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1px;height:10px;width:150px;min-width:150px;flex-shrink:0;border-radius:3px;overflow:hidden;margin-left:auto">
+              <sc-for list="{{pm.monthCells}}" as="cell" hint-placeholder-count="12">
+                <div style="background:{{cell.color}}"></div>
+              </sc-for>
+            </div>
+          </div>
+          <sc-if value="{{pm.expanded}}" hint-placeholder-val="{{false}}">
+            <sc-for list="{{pm.projects}}" as="proj" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:220px 1fr;gap:8px;align-items:center;padding:5px 0 5px 22px">
+                <div style="font-size:12px;color:{{proj.nameColor}};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{proj.name}}</div>
+                <sc-if value="{{proj.outside}}" hint-placeholder-val="{{false}}">
+                  <div style="font-size:11px;color:#c7cad1">outside 2026</div>
+                </sc-if>
+                <sc-if value="{{proj.hasBar}}" hint-placeholder-val="{{true}}">
+                  <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;min-width:0">
+                    <div style="grid-column:{{proj.gridColumn}};background:{{proj.barColor}};border-radius:4px;height:14px"></div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </sc-if>
+        </div>
+      </sc-for>
+
+      <div style="font-size:11px;color:#9ca3af;margin-top:14px;padding-top:12px;border-top:1px solid #f1f2f4">Badge = current-month load. Strip = Jan–Dec trend, so you can see when each PM peaks.</div>
+    </div>
+
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;heatPalette&quot;: {
+    &quot;editor&quot;: &quot;color&quot;,
+    &quot;default&quot;: [&quot;#ede9fe&quot;, &quot;#5b21b6&quot;],
+    &quot;options&quot;: [[&quot;#ede9fe&quot;, &quot;#5b21b6&quot;], [&quot;#e0f2fe&quot;, &quot;#075985&quot;], [&quot;#fef3c7&quot;, &quot;#b45309&quot;], [&quot;#fce7f3&quot;, &quot;#9d174d&quot;], [&quot;#eef2f7&quot;, &quot;#1e293b&quot;]],
+    &quot;tsType&quot;: &quot;string[]&quot;,
+    &quot;section&quot;: &quot;Utilization color&quot;
+  },
+  &quot;colorfulHeaders&quot;: {
+    &quot;editor&quot;: &quot;boolean&quot;,
+    &quot;default&quot;: true,
+    &quot;tsType&quot;: &quot;boolean&quot;,
+    &quot;section&quot;: &quot;Style&quot;
+  }
+}">
+class Component extends DCLogic {
+  state = { expanded: { a: {}, b: {}, c: {} } };
+
+  toggle(variant, pmId) {
+    this.setState(s => {
+      const v = { ...s.expanded[variant] };
+      v[pmId] = !v[pmId];
+      return { expanded: { ...s.expanded, [variant]: v } };
+    });
+  }
+
+  renderVals() {
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const STATUS_COLOR = { Ongoing:'#22c55e', Completed:'#3b82f6', Initiation:'#f59e0b', OnHold:'#eab308', Cancelled:'#ef4444', Unknown:'#94a3b8' };
+    const STATUS_WEIGHT = { Ongoing:1, Completed:0.3, Initiation:0.6, OnHold:0.6, Cancelled:0.1, Unknown:0.4 };
+    const CURRENT_MONTH = 6; // July
+
+    const raw = [
+      { id:'alina', name:'Alina Nosulych', projects:[
+        { name:'F5 Refresh', start:0, end:11, status:'Ongoing' },
+        { name:'Central FAX migration to eFAX solution', start:0, end:4, status:'Completed' },
+        { name:'NGFW Proposals EXP', start:0, end:11, status:'Ongoing' },
+        { name:'Migration of Secure Access User Access', start:2, end:8, status:'Ongoing' },
+        { name:'BARN Security Enforcement', start:2, end:7, status:'Ongoing' },
+        { name:'ACI Upgrade - global activity (BARN)', start:2, end:3, status:'Completed' },
+        { name:'ITS E2E Services Analysis for possible outsourcing', start:5, end:8, status:'Initiation' },
+      ]},
+      { id:'andrea', name:'Andrea Stratilova', projects:[
+        { name:'Cookies and consent management', start:0, end:11, status:'Ongoing' },
+        { name:'Demand Management (Whitelisting)', start:0, end:11, status:'Ongoing' },
+        { name:'NGFW Proposals (DSC, ...)', start:0, end:11, status:'Ongoing' },
+      ]},
+      { id:'carlos', name:'Carlos Crawford', projects:[
+        { name:'DSCUS New LPAR Optimus', start:0, end:2, status:'Completed' },
+        { name:'DSCBR 22 Servers Migration to NAS', start:0, end:5, status:'Ongoing' },
+        { name:'ExpAM-17020-WIN 2016 OS Refresh', outside:true },
+        { name:'DSCBR 22 Servers Migration to NAS', outside:true },
+        { name:'ExpAM-17029-DHCP Latam Migration', start:0, end:8, status:'Ongoing' },
+        { name:'DSCBR - DHCP Migration', start:0, end:7, status:'Ongoing' },
+        { name:'DSCMX - DHCP Migration', start:0, end:5, status:'Ongoing' },
+        { name:'DSCCO - DHCP Migration', start:0, end:5, status:'Ongoing' },
+      ]},
+    ];
+
+    let globalMax = 0;
+    const pmsCore = raw.map(pm => {
+      const monthLoad = new Array(12).fill(0);
+      pm.projects.forEach(p => {
+        if (p.outside) return;
+        for (let m = p.start; m <= p.end; m++) monthLoad[m] += STATUS_WEIGHT[p.status];
+      });
+      monthLoad.forEach(v => { if (v > globalMax) globalMax = v; });
+      return { ...pm, monthLoad };
+    });
+
+    const hexToRgb = (hex) => {
+      const h = hex.replace('#','');
+      return [parseInt(h.substring(0,2),16), parseInt(h.substring(2,4),16), parseInt(h.substring(4,6),16)];
+    };
+    const palette = this.props.heatPalette ?? ['#ede9fe', '#5b21b6'];
+    const a = hexToRgb(palette[0]), b = hexToRgb(palette[1]);
+    const lerpColor = (t) => {
+      const r = Math.round(a[0] + (b[0]-a[0]) * t);
+      const g = Math.round(a[1] + (b[1]-a[1]) * t);
+      const bl = Math.round(a[2] + (b[2]-a[2]) * t);
+      return `rgb(${r},${g},${bl})`;
+    };
+    const colorful = this.props.colorfulHeaders ?? true;
+    const cardTheme = {
+      bg: colorful ? `${palette[0]}` : '#ffffff',
+      border: colorful ? palette[1] + '33' : '#e5e7eb',
+      badgeBg: colorful ? palette[1] : '#111827',
+      titleColor: colorful ? palette[1] : '#6b7280',
+    };
+    const labelFor = (t) => t < 0.25 ? 'Low' : t < 0.5 ? 'Moderate' : t < 0.75 ? 'High' : 'Very high';
+
+    const pms = pmsCore.map(pm => {
+      const monthCells = pm.monthLoad.map(v => {
+        const t = globalMax ? v / globalMax : 0;
+        return { t, color: lerpColor(t) };
+      });
+      const avgT = globalMax ? pm.monthLoad[CURRENT_MONTH] / globalMax : 0;
+      const avgColor = lerpColor(avgT);
+      const avgLabel = labelFor(avgT);
+      const avgTextColor = avgT > 0.55 ? '#fff' : '#1e293b';
+
+      const projects = pm.projects.map(p => {
+        if (p.outside) return { name: p.name, outside: true, hasBar: false, nameColor: '#c7cad1', gridColumn: '1 / 2', barColor: 'transparent' };
+        return {
+          name: p.name,
+          outside: false,
+          hasBar: true,
+          nameColor: '#374151',
+          gridColumn: `${p.start + 1} / ${p.end + 2}`,
+          barColor: STATUS_COLOR[p.status],
+        };
+      });
+
+      return { id: pm.id, name: pm.name, count: pm.projects.length, monthCells, avgColor, avgLabel, avgTextColor, projects };
+    });
+
+    const makeVariant = (variant) => pms.map(pm => {
+      const expanded = !!this.state.expanded[variant][pm.id];
+      return { ...pm, expanded, rotate: expanded ? '90deg' : '0deg', toggle: () => this.toggle(variant, pm.id) };
+    });
+
+    return {
+      months: MONTHS.map((m, i) => ({ name: m, weight: i === CURRENT_MONTH ? 700 : 400 })),
+      scaleSwatches: [0, 0.25, 0.5, 0.75, 1].map(t => ({ color: lerpColor(t) })),
+      cardTheme,
+      pmsA: makeVariant('a'),
+      pmsB: makeVariant('b'),
+      pmsC: makeVariant('c'),
+    };
+  }
+}
+
+</script>
+</body>
+</html>
