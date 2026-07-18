@@ -118,6 +118,7 @@ th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
   background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
 }
 .filter-group { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+.filter-group-search { min-width: 260px; flex: 1 1 260px; }
 .filter-group label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
 .filter-select {
   font: inherit; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px;
@@ -143,6 +144,9 @@ th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 }
 .ms-search { padding: 6px 8px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); }
 .ms-search input { width: 100%; border: 1px solid var(--border); border-radius: 4px; padding: 4px 7px; font-size: 12px; outline: none; }
+.ms-bulk-row { display: flex; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--border); position: sticky; top: 33px; background: var(--surface); z-index: 1; }
+.ms-bulk-btn { flex: 1; font-size: 11px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; background: #f8f9fb; color: var(--muted); cursor: pointer; }
+.ms-bulk-btn:hover { background: #fffbeb; color: var(--text); }
 .ms-option { display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 12.5px; cursor: pointer; }
 .ms-option:hover { background: #fffbeb; }
 .ms-empty { padding: 8px 10px; color: var(--muted); font-size: 12.5px; }
@@ -206,6 +210,14 @@ th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 .pmu-chevron.open { transform: rotate(90deg); }
 .pmu-pm-name { font-weight: 600; font-size: 14px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pmu-pm-count { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+.pmu-flag-badge {
+  display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0;
+  font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7;
+  border: 1px solid #fcd34d; border-radius: 20px; padding: 1px 7px; cursor: default;
+}
+.pmu-flag-badge-inline { padding: 1px 5px; margin-right: 5px; }
+.pmu-proj-name-clickable { cursor: pointer; }
+.pmu-proj-name-clickable:hover { color: var(--dhl-red); text-decoration: underline; }
 .pmu-strip { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 1px; height: 12px; min-width: 0; }
 .pmu-strip-cell-wrap { position: relative; height: 100%; }
 .pmu-strip-cell-wrap:first-child .pmu-strip-cell { border-radius: 3px 0 0 3px; }
@@ -275,8 +287,8 @@ th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 .drawer-row-label { font-size: 12.5px; font-weight: 600; color: var(--muted); flex-shrink: 0; }
 .drawer-row-value { font-size: 13.5px; text-align: right; }
 .drawer-row-value.empty { color: #b4b4aa; }
-.drawer-comments { margin: 20px 24px; padding: 12px 14px; background: #fbfaf6; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; line-height: 1.6; }
-.drawer-related { margin: 0 24px 24px; }
+.drawer-comments { margin: 20px 24px 0; padding: 12px 14px; background: #fbfaf6; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; line-height: 1.6; }
+.drawer-related { margin: 20px 24px 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 .drawer-related-list { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .drawer-related-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 12.5px; }
 .drawer-related-row:last-child { border-bottom: none; }

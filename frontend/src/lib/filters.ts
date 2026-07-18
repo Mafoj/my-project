@@ -5,53 +5,45 @@
  */
 import { useCallback, useState } from 'react';
 import type { Project } from './types';
-import { PROB_BUCKETS } from './types';
 
 export interface MainFilters {
   search: string;
-  searchITS: string;
   tower: string[];
   pcOwnership: string[];
   pmName: string[];
   projectStatus: string[];
   bu: string[];
-  intExt: string[];
-  bsoIo: string[];
-  sy: string;
-  ey: string;
-  probBuckets: string[];
 }
 
 export const mkMainFilters = (): MainFilters => ({
-  search: '', searchITS: '',
+  search: '',
   tower: [], pcOwnership: [], pmName: [],
   projectStatus: ['Initiation', 'On Hold', 'Ongoing'],
-  bu: [], intExt: [], bsoIo: [],
-  sy: '', ey: '', probBuckets: [],
+  bu: [],
 });
 
-const startYear = (p: Project) => (p.start_date ? p.start_date.slice(0, 4) : '');
-const endYear = (p: Project) => (p.end_date ? p.end_date.slice(0, 4) : '');
+// Columns the universal search looks across. Kept in one place so it's
+// obvious what "search everything" actually means.
+const SEARCHABLE_FIELDS: (keyof Project)[] = [
+  'project_name', 'project_name_its', 'pm_name', 'project_status', 'tower', 'bu', 'comments',
+];
 
 export function applyMainFilters(projects: Project[], f: MainFilters): Project[] {
-  const q = f.search.trim().toLowerCase();
-  const qITS = f.searchITS.trim().toLowerCase();
+  // Multi-word AND: every word must appear somewhere among the row's
+  // searchable columns, but not necessarily in the same column -- so
+  // "fojtek ongoing" matches a row whose PM name has "Fojtek" and whose
+  // status is "Ongoing".
+  const words = f.search.trim().toLowerCase().split(/\s+/).filter(Boolean);
   return projects.filter((p) => {
-    if (q && !p.project_name.toLowerCase().includes(q)) return false;
-    if (qITS && !p.project_name_its.toLowerCase().includes(qITS)) return false;
+    if (words.length) {
+      const haystack = SEARCHABLE_FIELDS.map((k) => String(p[k] ?? '')).join(' ␟ ').toLowerCase();
+      if (!words.every((w) => haystack.includes(w))) return false;
+    }
     if (f.tower.length && !f.tower.includes(p.tower)) return false;
     if (f.pcOwnership.length && !f.pcOwnership.includes(p.pc_ownership)) return false;
     if (f.pmName.length && !f.pmName.includes(p.pm_name)) return false;
     if (f.projectStatus.length && !f.projectStatus.includes(p.project_status)) return false;
     if (f.bu.length && !f.bu.includes(p.bu)) return false;
-    if (f.intExt.length && !f.intExt.includes(p.int_ext)) return false;
-    if (f.bsoIo.length && !f.bsoIo.includes(p.bso_io)) return false;
-    if (f.probBuckets.length) {
-      const b = PROB_BUCKETS.find((b) => b.test(p.probability));
-      if (!b || !f.probBuckets.includes(b.label)) return false;
-    }
-    if (f.sy && startYear(p) !== f.sy) return false;
-    if (f.ey && endYear(p) !== f.ey) return false;
     return true;
   });
 }

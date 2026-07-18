@@ -13,6 +13,7 @@ interface Props {
   setFilters: (upd: MainFilters | ((prev: MainFilters) => MainFilters)) => void;
   filtersSync: boolean;
   toggleFiltersSync: () => void;
+  hideFilters: boolean;
   onRowClick: (p: Project) => void;
 }
 
@@ -30,18 +31,20 @@ const COLUMNS: { label: string; key: keyof Project; align?: 'num' | 'nowrap' }[]
   { label: 'Value 2026', key: 'value_2026', align: 'num' },
 ];
 
-export function ProjectList({ projects, filters, setFilters, filtersSync, toggleFiltersSync, onRowClick }: Props) {
+export function ProjectList({ projects, filters, setFilters, filtersSync, toggleFiltersSync, hideFilters, onRowClick }: Props) {
   const filtered = applyMainFilters(projects, filters);
   const { sort, toggle, sortRows } = useTableSort<Record<string, unknown>>('project_name', 'asc');
   const shown = useMemo(() => sortRows(filtered as unknown as Record<string, unknown>[]).slice(0, 300) as unknown as Project[], [filtered, sortRows]);
 
   return (
     <div className="page">
-      <FilterBar
-        projects={projects} filters={filters} setFilters={setFilters}
-        nFiltered={filtered.length} nTotal={projects.length}
-        filtersSync={filtersSync} toggleFiltersSync={toggleFiltersSync}
-      />
+      {!hideFilters && (
+        <FilterBar
+          projects={projects} filters={filters} setFilters={setFilters}
+          nFiltered={filtered.length} nTotal={projects.length}
+          filtersSync={filtersSync} toggleFiltersSync={toggleFiltersSync}
+        />
+      )}
       <div className="table-wrap">
         <table>
           <thead>

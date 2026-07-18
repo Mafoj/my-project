@@ -9,6 +9,7 @@ import { FilterBar } from '../components/FilterBar';
 import { STATUS_COLORS, MONTHS, UTILIZATION_WEIGHT, UTIL_PALETTE } from '../lib/constants';
 import { lerpColor } from '../lib/color';
 import { applyMainFilters, usePersistedState, type MainFilters } from '../lib/filters';
+import { getProjectFlags } from '../lib/qualityFlags';
 import type { Project } from '../lib/types';
 
 interface Props {
@@ -17,6 +18,8 @@ interface Props {
   setFilters: (upd: MainFilters | ((prev: MainFilters) => MainFilters)) => void;
   filtersSync: boolean;
   toggleFiltersSync: () => void;
+  hideFilters: boolean;
+  onProjectClick: (p: Project) => void;
 }
 
 function usePMGroups(data: Project[]) {
@@ -49,11 +52,12 @@ function monthSpanInYear(p: Project, year: number): [number, number] | null {
   return [startM, endM];
 }
 
-export function Timeline({ projects, filters, setFilters, filtersSync, toggleFiltersSync }: Props) {
+export function Timeline({ projects, filters, setFilters, filtersSync, toggleFiltersSync, hideFilters, onProjectClick }: Props) {
   const filtered = applyMainFilters(projects, filters);
   const pmGroups = usePMGroups(filtered);
   const thisYear = useMemo(() => new Date().getFullYear(), []);
   const currentMonth = useMemo(() => new Date().getMonth(), []);
+  const today = useMemo(() => new Date(), []);
 
   // Years that actually have project data (start or end date), across the
   // whole dataset -- not just the current filters -- so switching years
@@ -138,13 +142,23 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
         }
       });
 
-      return { pm, rows, monthLoad, monthStatusCounts };
+      // Data-quality flags (Overdue, Missing Funding/Probability/BU/Order),
+      // same checks as the Project Quality tab -- surfaced here so an issue
+      // is visible without switching tabs. On Hold is excluded; it's already
+      // visually distinct via bar/strip color.
+      const rowFlags = rows.map((p) => ({ p, flags: getProjectFlags(p, today) }));
+      const flaggedCount = rowFlags.filter((r) => r.flags.length > 0).length;
+      const flagLabelCounts = new Map<string, number>();
+      rowFlags.forEach((r) => r.flags.forEach((f) => flagLabelCounts.set(f.label, (flagLabelCounts.get(f.label) ?? 0) + 1)));
+      const flagTooltip = [...flagLabelCounts.entries()].map(([label, n]) => `${n} ${label}`).join(', ');
+
+      return { pm, rows, monthLoad, monthStatusCounts, flaggedCount, flagTooltip };
     });
     // Hide PMs with nothing touching the selected year -- browsing to a year
     // where a PM has no work would otherwise leave an empty, misleading row.
     const visible = data.filter((d) => d.monthLoad.some((v) => v > 0));
     return { pmData: visible, globalMax: max };
-  }, [pmGroups, year]);
+  }, [pmGroups, year, today]);
 
   const usedStatuses = [...new Set(filtered.map((p) => p.project_status).filter(Boolean))].sort();
   const allExpanded = pmData.length > 0 && pmData.every((d) => expanded[d.pm]);
@@ -153,11 +167,13 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
 
   return (
     <div className="page">
-      <FilterBar
-        projects={projects} filters={filters} setFilters={setFilters}
-        nFiltered={filtered.length} nTotal={projects.length} showBsoIo
-        filtersSync={filtersSync} toggleFiltersSync={toggleFiltersSync}
-      />
+      {!hideFilters && (
+        <FilterBar
+          projects={projects} filters={filters} setFilters={setFilters}
+          nFiltered={filtered.length} nTotal={projects.length}
+          filtersSync={filtersSync} toggleFiltersSync={toggleFiltersSync}
+        />
+      )}
       <div className="card pmu-card">
         <div className="timeline-hdr">
           <div className="pmu-year-nav">
@@ -205,7 +221,7 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
             <div className="progress-note">No projects active in {year} match the current filters.</div>
           )}
 
-          {pmData.map(({ pm, rows, monthLoad, monthStatusCounts }) => {
+          {pmData.map(({ pm, rows, monthLoad, monthStatusCounts, flaggedCount, flagTooltip }) => {
             const isOpen = !!expanded[pm];
             return (
               <div key={pm} className="pmu-pm-block">
@@ -214,6 +230,11 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
                     <span className={`pmu-chevron${isOpen ? ' open' : ''}`}>▸</span>
                     <span className="pmu-pm-name">{pm}</span>
                     <span className="pmu-pm-count">({rows.length})</span>
+                    {flaggedCount > 0 && (
+                      <span className="pmu-flag-badge" title={`${flaggedCount} project${flaggedCount !== 1 ? 's' : ''} with data-quality issues: ${flagTooltip}`}>
+                        ⚠ {flaggedCount}
+                      </span>
+                    )}
                   </div>
                   <div className="pmu-strip">
                     {monthLoad.map((v, i) => {
@@ -243,9 +264,22 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
 
                 {isOpen && rows.map((p, i) => {
                   const span = monthSpanInYear(p, year);
+                  const flags = getProjectFlags(p, today);
                   return (
                     <div key={i} className="pmu-row pmu-proj-row">
-                      <div className="pmu-label-col pmu-proj-name" title={p.project_name}>{p.project_name || '—'}</div>
+                      <div
+                        className="pmu-label-col pmu-proj-name pmu-proj-name-clickable"
+                        title={p.project_name} onClick={() => onProjectClick(p)}
+                      >
+                        {flags.length > 0 && (
+                          <span
+                            className="pmu-flag-badge pmu-flag-badge-inline"
+                            title={`Data-quality issues: ${flags.map((f) => f.label).join(', ')}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >⚠</span>
+                        )}
+                        {p.project_name || '—'}
+                      </div>
                       {span ? (
                         <div className="pmu-bar-grid">
                           <div

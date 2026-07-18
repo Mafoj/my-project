@@ -5,7 +5,8 @@ import { fmtEur } from '../lib/format';
 import { STATUS_COLORS } from '../lib/constants';
 import { applyMainFilters, type MainFilters } from '../lib/filters';
 import { useTableSort } from '../lib/useTableSort';
-import { CLOSED_STATUSES, type Project } from '../lib/types';
+import { getProjectFlags } from '../lib/qualityFlags';
+import { type Project } from '../lib/types';
 
 interface Props {
   projects: Project[];
@@ -13,12 +14,13 @@ interface Props {
   setFilters: (upd: MainFilters | ((prev: MainFilters) => MainFilters)) => void;
   filtersSync: boolean;
   toggleFiltersSync: () => void;
+  hideFilters: boolean;
 }
 
 const DAY_MS = 86400000;
 const daysBetween = (a: Date, b: Date) => Math.round((a.getTime() - b.getTime()) / DAY_MS);
 
-export function ProjectQuality({ projects, filters, setFilters, filtersSync, toggleFiltersSync }: Props) {
+export function ProjectQuality({ projects, filters, setFilters, filtersSync, toggleFiltersSync, hideFilters }: Props) {
   const filtered = applyMainFilters(projects, filters);
 
   const onHoldRef = useRef<HTMLDivElement>(null);
@@ -39,11 +41,10 @@ export function ProjectQuality({ projects, filters, setFilters, filtersSync, tog
   const CY = today.getFullYear();
   const sixtyAgo = useMemo(() => { const d = new Date(today); d.setDate(today.getDate() - 60); return d; }, [today]);
 
+  const hasFlag = (p: Project, key: string) => getProjectFlags(p, today).some((f) => f.key === key);
+
   const onHold = useMemo(() => filtered.filter((p) => p.project_status === 'On Hold'), [filtered]);
-  const overdue = useMemo(() => filtered.filter((p) => {
-    if (!p.end_date) return false;
-    return daysBetween(new Date(p.end_date), today) < 0 && !CLOSED_STATUSES.has(p.project_status);
-  }), [filtered, today]);
+  const overdue = useMemo(() => filtered.filter((p) => hasFlag(p, 'overdue')), [filtered, today]);
   const endingSoon = useMemo(() => filtered.filter((p) => {
     if (!p.end_date) return false;
     const d = daysBetween(new Date(p.end_date), today);
@@ -54,10 +55,10 @@ export function ProjectQuality({ projects, filters, setFilters, filtersSync, tog
     const d = new Date(p.start_date);
     return d >= sixtyAgo && d <= today;
   }), [filtered, today, sixtyAgo]);
-  const missFunding = useMemo(() => filtered.filter((p) => !p.value_2026 && !p.value_weighted_2026), [filtered]);
-  const missOrder = useMemo(() => filtered.filter((p) => !p.bso_io.trim() && !p.sales_force.trim()), [filtered]);
-  const missBU = useMemo(() => filtered.filter((p) => !p.bu.trim()), [filtered]);
-  const missProb = useMemo(() => filtered.filter((p) => !p.probability), [filtered]);
+  const missFunding = useMemo(() => filtered.filter((p) => hasFlag(p, 'missingFunding')), [filtered, today]);
+  const missOrder = useMemo(() => filtered.filter((p) => hasFlag(p, 'missingOrder')), [filtered, today]);
+  const missBU = useMemo(() => filtered.filter((p) => hasFlag(p, 'missingBU')), [filtered, today]);
+  const missProb = useMemo(() => filtered.filter((p) => hasFlag(p, 'missingProbability')), [filtered, today]);
 
   const startYear = (p: Project) => (p.start_date ? p.start_date.slice(0, 4) : '');
   const agoData = useMemo(() => [
@@ -90,11 +91,13 @@ export function ProjectQuality({ projects, filters, setFilters, filtersSync, tog
 
   return (
     <div className="page">
-      <FilterBar
-        projects={projects} filters={filters} setFilters={setFilters}
-        nFiltered={filtered.length} nTotal={projects.length}
-        filtersSync={filtersSync} toggleFiltersSync={toggleFiltersSync}
-      />
+      {!hideFilters && (
+        <FilterBar
+          projects={projects} filters={filters} setFilters={setFilters}
+          nFiltered={filtered.length} nTotal={projects.length}
+          filtersSync={filtersSync} toggleFiltersSync={toggleFiltersSync}
+        />
+      )}
 
       <QualitySummary
         totalProjects={filtered.length}

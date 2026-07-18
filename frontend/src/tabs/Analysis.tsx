@@ -10,19 +10,22 @@ interface Props {
   setFilters: (upd: MainFilters | ((prev: MainFilters) => MainFilters)) => void;
   filtersSync: boolean;
   toggleFiltersSync: () => void;
+  hideFilters: boolean;
 }
 
-export function Analysis({ projects, filters, setFilters, filtersSync, toggleFiltersSync }: Props) {
+export function Analysis({ projects, filters, setFilters, filtersSync, toggleFiltersSync, hideFilters }: Props) {
   const filtered = applyMainFilters(projects, filters);
   const pipelineData = filtered.filter((p) => PIPELINE_STATUSES.includes(p.project_status));
 
   return (
     <div className="page">
-      <FilterBar
-        projects={projects} filters={filters} setFilters={setFilters}
-        nFiltered={filtered.length} nTotal={projects.length}
-        filtersSync={filtersSync} toggleFiltersSync={toggleFiltersSync}
-      />
+      {!hideFilters && (
+        <FilterBar
+          projects={projects} filters={filters} setFilters={setFilters}
+          nFiltered={filtered.length} nTotal={projects.length}
+          filtersSync={filtersSync} toggleFiltersSync={toggleFiltersSync}
+        />
+      )}
       <div className="grid-2">
         <div className="card">
           <div className="section-title-row">

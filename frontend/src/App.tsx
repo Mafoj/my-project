@@ -39,6 +39,8 @@ export default function App() {
   const [sharedFilters, setSharedFilters] = usePersistedState('pipeline_filters_shared', mkMainFilters);
   const toggleFiltersSync = () => setFiltersSync((s) => !s);
   const [hideKpis, setHideKpis] = usePersistedState('pipeline_hide_kpis', () => false);
+  const [hideFilters, setHideFilters] = usePersistedState('pipeline_hide_filters', () => false);
+  const toggleHideFilters = () => setHideFilters((v) => !v);
 
   const [projectListFilters, setProjectListFilters] = useTabFilters('projectList', filtersSync, sharedFilters, setSharedFilters);
   const [analysisFilters, setAnalysisFilters] = useTabFilters('analysis', filtersSync, sharedFilters, setSharedFilters);
@@ -122,6 +124,16 @@ export default function App() {
           </p>
         </div>
         <div className="hdr-actions">
+          <button
+            type="button" className="switch-row"
+            role="switch" aria-checked={!hideFilters}
+            onClick={toggleHideFilters}
+          >
+            <span className="switch-row-label">Filters</span>
+            <span className={`switch${hideFilters ? '' : ' on'}`}>
+              <span className="switch-knob" />
+            </span>
+          </button>
           <button
             type="button" className="switch-row"
             role="switch" aria-checked={!hideKpis}
@@ -209,6 +221,7 @@ export default function App() {
             filters={projectListFilters} setFilters={setProjectListFilters}
             filtersSync={filtersSync}
             toggleFiltersSync={toggleFiltersSync}
+            hideFilters={hideFilters}
             onRowClick={setSelected}
           />
         )}
@@ -218,6 +231,7 @@ export default function App() {
             filters={analysisFilters} setFilters={setAnalysisFilters}
             filtersSync={filtersSync}
             toggleFiltersSync={toggleFiltersSync}
+            hideFilters={hideFilters}
           />
         )}
         {tab === 'timeline' && (
@@ -226,6 +240,8 @@ export default function App() {
             filters={timelineFilters} setFilters={setTimelineFilters}
             filtersSync={filtersSync}
             toggleFiltersSync={toggleFiltersSync}
+            hideFilters={hideFilters}
+            onProjectClick={setSelected}
           />
         )}
         {tab === 'projectQuality' && (
@@ -234,6 +250,7 @@ export default function App() {
             filters={projectQualityFilters} setFilters={setProjectQualityFilters}
             filtersSync={filtersSync}
             toggleFiltersSync={toggleFiltersSync}
+            hideFilters={hideFilters}
           />
         )}
         {tab === 'allocation' && <AllocationTab allocations={data.allocations} />}

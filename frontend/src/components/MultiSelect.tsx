@@ -37,6 +37,14 @@ export function MultiSelect({ options, value, onChange }: Props) {
           <div className="ms-search">
             <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" />
           </div>
+          <div className="ms-bulk-row">
+            <button type="button" className="ms-bulk-btn" onClick={() => onChange([...new Set([...value, ...filtered])])}>
+              Select all
+            </button>
+            <button type="button" className="ms-bulk-btn" onClick={() => onChange(value.filter((v) => !filtered.includes(v)))}>
+              Clear
+            </button>
+          </div>
           {filtered.map((o) => (
             <label key={o} className="ms-option">
               <input type="checkbox" checked={value.includes(o)} onChange={() => toggle(o)} />
