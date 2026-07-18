@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { FilterBar } from '../components/FilterBar';
 import { SortTh } from '../components/SortTh';
 import { fmtEur } from '../lib/format';
-import { STATUS_COLORS } from '../lib/constants';
+import { STATUS_COLORS, STATUS_FALLBACK } from '../lib/constants';
 import { applyMainFilters, type MainFilters } from '../lib/filters';
 import { useTableSort } from '../lib/useTableSort';
 import { getProjectFlags } from '../lib/qualityFlags';
@@ -90,7 +90,7 @@ export function ProjectQuality({ projects, filters, setFilters, filtersSync, tog
   );
 
   return (
-    <div className="page">
+    <div className="page pq-page">
       {!hideFilters && (
         <FilterBar
           projects={projects} filters={filters} setFilters={setFilters}
@@ -102,24 +102,24 @@ export function ProjectQuality({ projects, filters, setFilters, filtersSync, tog
       <QualitySummary
         totalProjects={filtered.length}
         flags={[
-          { label: 'Overdue', value: overdue.length, color: '#c0392b', onClick: scrollTo(overdueRef) },
-          { label: 'Missing Funding', value: missFunding.length, color: '#e88a3a', onClick: scrollTo(missFundRef) },
-          { label: 'On Hold', value: onHold.length, color: '#c9832e', onClick: scrollTo(onHoldRef) },
-          { label: 'Missing Probability', value: missProb.length, color: '#c9832e', onClick: scrollTo(missProbRef) },
-          { label: 'Missing BU', value: missBU.length, color: '#d9a866', onClick: scrollTo(missBURef) },
+          { label: 'Overdue', value: overdue.length, color: '#b2584f', onClick: scrollTo(overdueRef) },
+          { label: 'Missing Funding', value: missFunding.length, color: '#d6ac7a', onClick: scrollTo(missFundRef) },
+          { label: 'On Hold', value: onHold.length, color: '#c9b384', onClick: scrollTo(onHoldRef) },
+          { label: 'Missing Probability', value: missProb.length, color: '#8ba6c9', onClick: scrollTo(missProbRef) },
+          { label: 'Missing BU', value: missBU.length, color: '#d9c9a8', onClick: scrollTo(missBURef) },
         ]}
         otherFlags={[
-          { label: 'On Hold', value: onHold.length, color: '#c9832e', onClick: scrollTo(onHoldRef) },
-          { label: 'Missing Probability', value: missProb.length, color: '#c9832e', onClick: scrollTo(missProbRef) },
-          { label: 'Missing BU', value: missBU.length, color: '#d9a866', onClick: scrollTo(missBURef) },
-          { label: 'Missing Order #', value: missOrder.length, color: '#111827', onClick: scrollTo(missOrderRef) },
+          { label: 'On Hold', value: onHold.length, color: '#c9b384', onClick: scrollTo(onHoldRef) },
+          { label: 'Missing Probability', value: missProb.length, color: '#8ba6c9', onClick: scrollTo(missProbRef) },
+          { label: 'Missing BU', value: missBU.length, color: '#d9c9a8', onClick: scrollTo(missBURef) },
+          { label: 'Missing Order #', value: missOrder.length, color: 'var(--pq-strong-text)', onClick: scrollTo(missOrderRef) },
         ]}
         timingBuckets={[
-          { label: 'Ending ≤60d', value: endingSoon.length, color: '#c9832e', onClick: scrollTo(endingSoonRef) },
-          { label: 'Started ≤60d', value: startedRecently.length, color: '#2f7a52', onClick: scrollTo(startedRef) },
-          { label: '1 year ago', value: agoData[0].rows.length, color: '#111827', onClick: scrollTo(agoData[0].ref) },
-          { label: '2 years ago', value: agoData[1].rows.length, color: '#5b6472', onClick: scrollTo(agoData[1].ref) },
-          { label: '3+ years', value: agoData[2].rows.length, color: '#9aa1ac', onClick: scrollTo(agoData[2].ref) },
+          { label: 'Ending ≤60d', value: endingSoon.length, color: '#d6ac7a', onClick: scrollTo(endingSoonRef) },
+          { label: 'Started ≤60d', value: startedRecently.length, color: '#7fb59d', onClick: scrollTo(startedRef) },
+          { label: '1 year ago', value: agoData[0].rows.length, color: 'var(--pq-strong)', numberColor: 'var(--pq-strong-text)', onClick: scrollTo(agoData[0].ref) },
+          { label: '2 years ago', value: agoData[1].rows.length, color: '#6b7280', numberColor: '#9aa2ad', onClick: scrollTo(agoData[1].ref) },
+          { label: '3+ years', value: agoData[2].rows.length, color: '#c7ccd3', onClick: scrollTo(agoData[2].ref) },
         ]}
       />
 
@@ -368,7 +368,7 @@ export function ProjectQuality({ projects, filters, setFilters, filtersSync, tog
 }
 
 function statusBadge(p: Project) {
-  return <span className="badge" style={{ background: STATUS_COLORS[p.project_status] || '#94a3b8' }}>{p.project_status || '—'}</span>;
+  return <span className="badge" style={{ background: STATUS_COLORS[p.project_status] || STATUS_FALLBACK }}>{p.project_status || '—'}</span>;
 }
 
 function daysUrgencyClass(d: number) {
@@ -423,6 +423,8 @@ interface FlagMetric {
   label: string;
   value: number;
   color: string;
+  /** Overrides `color` for the number/label text when it should differ from the bar/dot fill. */
+  numberColor?: string;
   onClick?: () => void;
 }
 
@@ -448,7 +450,7 @@ function QualitySummary({
     return `${f.color} ${from}% ${to}%`;
   });
   const remainderFrom = totalProjects ? (acc / totalProjects) * 100 : 0;
-  donutStops.push(`#e7e2df ${remainderFrom}% 100%`);
+  donutStops.push(`#e3e6ea ${remainderFrom}% 100%`);
   const topFlags = [...flags].sort((a, b) => b.value - a.value).slice(0, 2);
 
   const trackedTotal = timingBuckets.reduce((s, b) => s + b.value, 0);
@@ -509,7 +511,7 @@ function QualitySummary({
               style={{ width: `${trackedTotal ? (b.value / trackedTotal) * 100 : 0}%` }}
               onClick={b.onClick} disabled={!b.onClick}
             >
-              <div className="pq-stat-value" style={{ color: b.color }}>{b.value}</div>
+              <div className="pq-stat-value" style={{ color: b.numberColor ?? b.color }}>{b.value}</div>
               <div className="pq-stat-label">{b.label}</div>
             </button>
           ))}

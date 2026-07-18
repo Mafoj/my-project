@@ -1,0 +1,114 @@
+# Handoff: PM Utilization Timeline (Option 1a)
+
+## Overview
+Redesign of a project-manager timeline/Gantt view. Each PM row shows their name, project count, and a NEW monthly utilization heat-strip (Jan–Dec) indicating how busy they are, without needing to expand. Clicking the row expands/collapses that PM's individual project Gantt bars — replacing the previous always-expanded layout.
+
+## About the Design Files
+The bundled file (`PM Utilization Timeline.dc.html`) is a **design reference built in HTML** — a working prototype of the intended look and interaction, not production code to copy directly. Recreate this in the target codebase's existing framework (React, Vue, etc.) using its established components, data-fetching, and styling conventions. If no frontend framework exists yet, pick whichever is best suited to the existing backend/stack.
+
+## Fidelity
+**High-fidelity.** Colors, spacing, typography, and interaction behavior below should be treated as final; recreate pixel-accurately unless it conflicts with the existing design system, in which case prefer the design system's tokens for color/type but keep the layout and interaction model.
+
+Note: the prototype contains 3 side-by-side layout variants (labeled 1a/1b/1c) built to compare options with the requester. **Only variant 1a (the "sparkline strip" layout) was approved** — ignore 1b and 1c; they're left in the file only as design-exploration history.
+
+## Screen: Timeline — Option 1a
+
+### Purpose
+Let a viewer scan all PMs' names, project counts, and relative workload at a glance, then drill into any PM's individual project schedule on demand.
+
+### Layout
+- Card container: fixed width in the prototype (860px), white background, 1px `#e5e7eb` border, 10px border-radius, 20px/24px padding, subtle shadow (`0 1px 2px rgba(0,0,0,0.04)`).
+- Header row: label "TIMELINE — 2026", 12px, uppercase, letter-spacing 0.06em, `#6b7280` (or accent color if "colorful headers" mode is on — see Tweaks).
+- Month header row: two-column CSS grid — fixed 220px label column + a `repeat(12, minmax(0,1fr))` grid for Jan–Dec column headers (8px gap column-to-column via 2px grid gap). Current month (July, at build time) is bold; others are regular weight. **Important:** grid children need `min-width:0` to prevent the 12-column month grid from overflowing its container — this bit us during implementation.
+- One row per PM, top-bordered (`1px solid #f1f2f4`), 10px vertical padding:
+  - Left: chevron (▸, rotates 90° to point down when expanded, `transition: transform .15s`), PM name (14px, 600 weight, `#111827`), project count in parens (13px, `#9ca3af`).
+  - Right: the **utilization strip** — a 12-cell CSS grid (1px gaps), 12px tall, rounded 3px, one cell per month, each colored along a light→dark scale (see Design Tokens) proportional to that month's weighted project load.
+  - Entire row is clickable (`cursor:pointer`) and toggles that PM's expanded state.
+- When expanded, each project appears as a sub-row indented 20px:
+  - Project name (12px, `#374151`, truncated with ellipsis if it overflows the 220px label column).
+  - A single Gantt bar (14px tall, 4px border-radius) placed via `grid-column: {startMonth+1} / {endMonth+2}` on the same 12-column grid, colored by project status (see Design Tokens).
+  - Projects outside the year (no start/end month) show a "outside 2026" label (11px, `#c7cad1`) instead of a bar.
+- Footer legend: 5 swatches (16×8px) sampling the utilization scale at t = 0, 0.25, 0.5, 0.75, 1, with caption "low → high, weighted by project status & month".
+
+### Components / Content
+- Chevron glyph: unicode "▸" (no icon asset needed); rotate via CSS transform, not a swapped glyph.
+- All copy (PM names, project names, month labels) is real content from the source infographic — see Assets/data below.
+
+## Interactions & Behavior
+- **Click a PM row** → toggles `expanded` state for that PM only (independent per PM; multiple can be open at once). No animation on the expand/collapse itself in the prototype (instant); consider adding a height transition in production.
+- No hover states were specced beyond the pointer cursor — add a subtle row hover background if it fits the target design system.
+- No loading/error states — this is a static-data prototype; wire up to real PM/project data.
+
+## State Management
+- Per-PM boolean `expanded` (default `false`, i.e. **collapsed by default** — matches the requirement that the default view shows only name + count + utilization strip).
+- Utilization is **derived**, not stored: for each PM, for each month, sum a status weight across all their projects active that month, then normalize by the single highest month-value across *all* PMs in view (a shared color scale, not per-PM).
+
+## Design Tokens
+
+### Status colors (Gantt bars — updated to a desaturated, modern palette; no pure RGB primaries)
+- Ongoing: `#7fb59d` (muted green)
+- Completed: `#8ba6c9` (muted blue)
+- Initiation: `#d6ac7a` (muted amber)
+- On Hold: `#c9b384` (muted gold)
+- Cancelled: `#cf9a92` (muted red)
+- Unknown: `#b7bec7` (muted gray)
+
+These share the same desaturation/lightness family as the utilization scale so the two color systems feel unified rather than mixing saturated "status" colors with pastel "utilization" colors. Verify each against its background for WCAG AA text/graphic contrast where used as text or icon color, not just fill.
+
+### Utilization weight per status (drives the heat-strip only, not bar color)
+- Ongoing: **1.0**
+- Completed: **0.3**
+- Initiation: **0.6**
+- On Hold: **0.6**
+- Cancelled: **0.1**
+- Unknown: **0.4**
+- Projects outside the year: excluded from load entirely (0).
+
+`monthLoad[m] = Σ weight(status) for every project active in month m` (a project is "active" in month m if `start <= m <= end`).
+`t = monthLoad[m] / globalMaxMonthLoad` (0–1), where `globalMaxMonthLoad` is the single largest `monthLoad` value across every PM and month currently shown.
+
+### Utilization color scale (light → dark, linear RGB interpolation on t)
+- Default (as shipped): muted plum, light `#e6e4f0` → dark `#4a4470`.
+- User's current viewport selection: muted mauve, light `#e8dfe4` → dark `#6b4458`.
+- Alternative palettes exercised during design: slate teal (`#dde6ea → #3d5a66`), muted tan (`#ece3dc → #7a5a3a`), mauve (`#e8dfe4 → #6b4458`), neutral slate (`#e3e6ea → #374151`).
+- Formula: `rgb = lightRGB + (darkRGB - lightRGB) * t` per channel, rounded.
+- All palettes are desaturated (no pure/primary RGB), consistent with a Linear/Notion/Stripe-style modern UI feel, and should read distinctly from the status colors above (avoid picking a utilization palette that hue-collides with the status greens/blues at a glance).
+- This same palette also drives (optionally) the card background tint, the "1a"-style corner badge, and the section title color — see "colorfulHeaders" below. **For the approved 1a card specifically, the card background was pinned to plain white regardless of that toggle** — only the utilization strip itself uses the palette.
+
+### Typography
+- Font stack: `-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif`.
+- Sizes used: 11px (month labels, legend), 12px (project names), 13px (project counts), 14px (PM names).
+
+### Spacing / structure
+- Label column: fixed 220px.
+- Grid gaps: 8px between label column and month grid; 2px between month columns in header/bars; 1px between utilization-strip cells.
+- Row divider: `1px solid #f1f2f4`.
+
+## Tweak Controls (from the prototype's Tweaks panel — reproduce as user-facing or config-level settings if useful)
+- **Utilization color** (`heatPalette`): swatch picker with the 5 two-color palettes listed above; drives the heat-strip and (if enabled) card accents.
+- **Colorful headers** (`colorfulHeaders`): boolean. When on, card background/badge/title pick up a light tint of the palette's accent color instead of white/gray/near-black. (Not applied to card 1a per the final approved state — that card was fixed to a white background.)
+
+## Assets
+No image/icon assets — everything is CSS shapes, color fills, and system-font text. No external fonts loaded.
+
+## Screen: Project Quality tab (recolor only)
+
+### Scope
+This is a **recolor of an existing screen**, not a layout change. Keep the existing "Project Quality" tab's structure, copy, filters, and data exactly as-is (tab bar, search/filter row, quality-check donut + flags, timing bar + labels). Only update colors, per the tokens below, to match the Timeline tab's new palette.
+
+### Color changes
+- Active tab indicator + text, and the "Synced" button: replace the bright/pure red with muted plum `#4a4470` (same accent used in the Timeline's utilization scale dark end).
+- Quality-check donut + "Missing funding" dot: muted amber `#d6ac7a` (was a saturated orange).
+- "Overdue" dot: muted red `#b2584f` (was a saturated red).
+- Donut remainder track: light neutral `#e3e6ea`.
+- "On Hold" flag number: muted gold `#c9b384`.
+- "Missing probability" flag number: muted blue `#8ba6c9`.
+- "Missing BU" flag number: light tan `#d9c9a8`.
+- "Missing order #" flag number: near-black `#1f2430` (unchanged — already neutral).
+- Timing bar segments + matching numbers, left to right: "Ending ≤60d" muted amber `#d6ac7a`, "Started ≤60d" muted green `#7fb59d`, "1 year ago" near-black `#2a2e38`/`#1f2430`, "2 years ago" mid-gray `#6b7280`/`#9aa2ad` track, "3+ years" light gray `#c7ccd3`.
+- **Layout fix included:** each timing-bar number/label is sized and positioned to the exact width of its corresponding bar segment (e.g. 17%/11%/52%/12%/8%) so it sits directly under its color, rather than being evenly spaced with `gap`. The last (smallest, 8%) segment's label is right-aligned so it doesn't overflow past the bar's edge.
+
+All other spacing, layout, copy, and iconography stay unchanged — this is a palette-only pass to bring this tab in line with the Timeline tab's desaturated, non-primary color system (see tokens above).
+
+## Files
+- `PM Utilization Timeline.dc.html` — the full prototype (variants 1a/1b/1c of the Timeline tab, plus a recolored Project Quality tab mock labeled 2a). Only 1a and 2a are approved for build.

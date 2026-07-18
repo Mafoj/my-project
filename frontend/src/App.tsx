@@ -5,11 +5,11 @@
  * lives in its own file under src/tabs/ so they can be reviewed and deployed
  * independently (see docs/ROADMAP.md, Sprint 2).
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { usePipeline } from './lib/usePipeline';
 import { fmtEur } from './lib/format';
 import type { Project } from './lib/types';
-import { STATUS_COLORS } from './lib/constants';
+import { STATUS_COLORS, STATUS_FALLBACK } from './lib/constants';
 import { mkMainFilters, usePersistedState, useTabFilters, applyMainFilters } from './lib/filters';
 import { ProjectDetail } from './components/ProjectDetail';
 import { ProjectList } from './tabs/ProjectList';
@@ -41,6 +41,10 @@ export default function App() {
   const [hideKpis, setHideKpis] = usePersistedState('pipeline_hide_kpis', () => false);
   const [hideFilters, setHideFilters] = usePersistedState('pipeline_hide_filters', () => false);
   const toggleHideFilters = () => setHideFilters((v) => !v);
+  const [darkMode, setDarkMode] = usePersistedState('pipeline_dark_mode', () => false);
+  useEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
+  }, [darkMode]);
 
   const [projectListFilters, setProjectListFilters] = useTabFilters('projectList', filtersSync, sharedFilters, setSharedFilters);
   const [analysisFilters, setAnalysisFilters] = useTabFilters('analysis', filtersSync, sharedFilters, setSharedFilters);
@@ -144,6 +148,16 @@ export default function App() {
               <span className="switch-knob" />
             </span>
           </button>
+          <button
+            type="button" className="switch-row"
+            role="switch" aria-checked={darkMode}
+            onClick={() => setDarkMode((v) => !v)}
+          >
+            <span className="switch-row-label">Dark</span>
+            <span className={`switch${darkMode ? ' on' : ''}`}>
+              <span className="switch-knob" />
+            </span>
+          </button>
           <button onClick={refresh}>↻ Refresh</button>
         </div>
       </header>
@@ -151,8 +165,10 @@ export default function App() {
       {!hideKpis && (
         <section className="kpi-row">
           <Kpi label="Filtered projects" value={String(kpis.filteredCount)} sub={`${kpis.total} total`} />
-          <Kpi label="Pipeline value 2026" value={fmtEur(kpis.value)} />
-          <Kpi label="Weighted value 2026" value={fmtEur(kpis.weighted)} />
+          <div className="kpi-stack">
+            <Kpi label="Pipeline value 2026" value={fmtEur(kpis.value)} />
+            <Kpi label="Weighted value 2026" value={fmtEur(kpis.weighted)} />
+          </div>
           <div className="kpi-group-card">
             <div className="kpi-group-title">By Status</div>
             <div className="kpi-group-chips">
@@ -166,7 +182,7 @@ export default function App() {
                     onClick={clickable ? () => toggleStatusFilter(status) : undefined}
                     disabled={!clickable}
                   >
-                    <span className="badge" style={{ background: STATUS_COLORS[status] || '#94a3b8' }}>{status || '—'}</span>
+                    <span className="badge" style={{ background: STATUS_COLORS[status] || STATUS_FALLBACK }}>{status || '—'}</span>
                     <span className="kpi-group-chip-stats">
                       <span className="kpi-group-chip-count">{count}</span>
                       <span className="kpi-group-chip-weighted">{fmtEur(weighted)}</span>
@@ -202,7 +218,7 @@ export default function App() {
         </section>
       )}
 
-      <nav className="tabs">
+      <nav className="tabs" data-tab={tab}>
         {TABS.map((t) => (
           <button
             key={t.id}

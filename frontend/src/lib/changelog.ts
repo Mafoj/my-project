@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.1';
+export const APP_VERSION = '0.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -8,6 +8,20 @@ export interface ChangelogEntry {
 
 /** Newest first. Add one entry per round of work, before committing. */
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '0.2',
+    date: '2026-07-18',
+    changes: [
+      'Timeline tab: hovering a project\'s Gantt bar now shows a tooltip with Start, End, Value, Status, BU, and any data-quality issues for that project.',
+      'Timeline tab recolored per the design handoff: desaturated status palette for Gantt bars/legend, and a mauve light-to-dark utilization heat-strip.',
+      'Project Quality tab recolored to match: muted plum active-tab indicator and "Synced" button (scoped to this tab only), muted amber/red donut with a neutral remainder track, recolored "Other Flags" numbers and timing bar segments, plus a layout fix so each timing-bar label sits under its segment and the last (smallest) label right-aligns instead of overflowing.',
+      'Consolidated status colors app-wide: KPI "By Status" chips, Project List, Project Quality, and the project detail drawer now all use the same desaturated status palette as the Timeline tab (previously two separate color sets); badge text switched to dark for contrast against the new lighter fills.',
+      'Timeline tab: status legend dots enlarged 3x for visibility.',
+      'KPI header: Pipeline Value 2026 and Weighted Value 2026 now stack vertically in one column instead of sitting side by side.',
+      'Added a Dark mode switch (next to Filters/KPIs) that persists across reloads and re-themes the whole app, including tables, cards, filter bar, alerts, and the Project Quality summary.',
+      'Added docs/project_quality.md documenting every Project Quality check and how it\'s calculated.',
+    ],
+  },
   {
     version: '0.1',
     date: '2026-07-17',

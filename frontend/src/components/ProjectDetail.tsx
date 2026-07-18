@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import type { Project } from '../lib/types';
 import { fmtEur, fmtPct } from '../lib/format';
-import { STATUS_COLORS } from '../lib/constants';
+import { STATUS_COLORS, STATUS_FALLBACK } from '../lib/constants';
 
 const OPEN_STATUSES = new Set(['Initiation', 'Starting', 'Ongoing', 'Active', 'Planning']);
 
@@ -56,7 +56,7 @@ export function ProjectDetail({ project, allProjects, onClose }: Props) {
           <div className="drawer-eyebrow">Project Details</div>
           <div className="drawer-title">{project.project_name || '—'}</div>
           <div className="drawer-status-row">
-            <span className="badge" style={{ background: STATUS_COLORS[project.project_status] || '#94a3b8' }}>
+            <span className="badge" style={{ background: STATUS_COLORS[project.project_status] || STATUS_FALLBACK }}>
               {project.project_status || '—'}
             </span>
             {project.bso_io && <span className="drawer-bso">BSO {project.bso_io}</span>}
@@ -118,7 +118,7 @@ export function ProjectDetail({ project, allProjects, onClose }: Props) {
                 {related.map((r, i) => (
                   <div key={i} className="drawer-related-row">
                     <div className="drawer-related-name" title={r.project_name}>{r.project_name}</div>
-                    <span className="badge" style={{ background: STATUS_COLORS[r.project_status] || '#94a3b8' }}>
+                    <span className="badge" style={{ background: STATUS_COLORS[r.project_status] || STATUS_FALLBACK }}>
                       {r.project_status || '—'}
                     </span>
                     <span className="drawer-related-value">{r.value_weighted_2026 ? fmtEur(r.value_weighted_2026) : '—'}</span>

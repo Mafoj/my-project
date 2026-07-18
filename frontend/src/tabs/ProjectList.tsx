@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { FilterBar } from '../components/FilterBar';
 import { SortTh } from '../components/SortTh';
 import { fmtEur, fmtPct } from '../lib/format';
-import { STATUS_COLORS } from '../lib/constants';
+import { STATUS_COLORS, STATUS_FALLBACK } from '../lib/constants';
 import { applyMainFilters, type MainFilters } from '../lib/filters';
 import { useTableSort } from '../lib/useTableSort';
 import type { Project } from '../lib/types';
@@ -60,7 +60,7 @@ export function ProjectList({ projects, filters, setFilters, filtersSync, toggle
                 <td>{p.project_name}</td>
                 <td>{p.project_name_its}</td>
                 <td>{p.pm_name}</td>
-                <td><span className="badge" style={{ background: STATUS_COLORS[p.project_status] || '#94a3b8' }}>{p.project_status || '—'}</span></td>
+                <td><span className="badge" style={{ background: STATUS_COLORS[p.project_status] || STATUS_FALLBACK }}>{p.project_status || '—'}</span></td>
                 <td>{p.tower}</td>
                 <td>{p.pc_ownership}</td>
                 <td>{p.int_ext}</td>

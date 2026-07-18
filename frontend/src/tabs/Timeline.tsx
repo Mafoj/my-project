@@ -6,10 +6,11 @@
  */
 import { useMemo, useState } from 'react';
 import { FilterBar } from '../components/FilterBar';
-import { STATUS_COLORS, MONTHS, UTILIZATION_WEIGHT, UTIL_PALETTE } from '../lib/constants';
+import { STATUS_COLORS, STATUS_FALLBACK, MONTHS, UTILIZATION_WEIGHT, UTIL_PALETTE } from '../lib/constants';
 import { lerpColor } from '../lib/color';
 import { applyMainFilters, usePersistedState, type MainFilters } from '../lib/filters';
 import { getProjectFlags } from '../lib/qualityFlags';
+import { fmtEur } from '../lib/format';
 import type { Project } from '../lib/types';
 
 interface Props {
@@ -190,7 +191,7 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
           <div className="timeline-legend">
             {usedStatuses.map((s) => (
               <span key={s} className="timeline-legend-item">
-                <span className="timeline-legend-dot" style={{ background: STATUS_COLORS[s] || '#94a3b8' }} />
+                <span className="timeline-legend-dot" style={{ background: STATUS_COLORS[s] || STATUS_FALLBACK }} />
                 {s}
               </span>
             ))}
@@ -250,7 +251,7 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
                               <div className="pmu-cell-tooltip-month">{MONTHS[i]}</div>
                               {counts.map(([status, count]) => (
                                 <div key={status} className="pmu-cell-tooltip-row">
-                                  <span className="pmu-cell-tooltip-dot" style={{ background: STATUS_COLORS[status] || '#94a3b8' }} />
+                                  <span className="pmu-cell-tooltip-dot" style={{ background: STATUS_COLORS[status] || STATUS_FALLBACK }} />
                                   <span>{count} {status}</span>
                                 </div>
                               ))}
@@ -282,11 +283,25 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
                       </div>
                       {span ? (
                         <div className="pmu-bar-grid">
-                          <div
-                            className="pmu-bar"
-                            title={`${p.start_date || '?'} → ${p.end_date || '?'}`}
-                            style={{ gridColumn: `${span[0] + 1} / ${span[1] + 2}`, background: STATUS_COLORS[p.project_status] || '#94a3b8' }}
-                          />
+                          <div className="pmu-bar-wrap" style={{ gridColumn: `${span[0] + 1} / ${span[1] + 2}` }}>
+                            <div
+                              className="pmu-bar"
+                              style={{ background: STATUS_COLORS[p.project_status] || STATUS_FALLBACK }}
+                            />
+                            <div className="pmu-cell-tooltip pmu-bar-tooltip">
+                              <div className="pmu-cell-tooltip-month">{p.project_name || 'Untitled project'}</div>
+                              <div className="pmu-cell-tooltip-row">Start: {p.start_date || '—'}</div>
+                              <div className="pmu-cell-tooltip-row">End: {p.end_date || '—'}</div>
+                              <div className="pmu-cell-tooltip-row">Value: {fmtEur(p.value_2026)}</div>
+                              <div className="pmu-cell-tooltip-row">Status: {p.project_status || '—'}</div>
+                              <div className="pmu-cell-tooltip-row">BU: {p.bu || '—'}</div>
+                              {flags.length > 0 && (
+                                <div className="pmu-cell-tooltip-row pmu-bar-tooltip-flags">
+                                  ⚠ {flags.map((f) => f.label).join(', ')}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ) : (
                         <div className="pmu-outside">outside {year}</div>
