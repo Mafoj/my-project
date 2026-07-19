@@ -104,12 +104,12 @@ export function ProjectQuality({ projects, filters, setFilters, filtersSync, tog
         flags={[
           { label: 'Overdue', value: overdue.length, color: '#b2584f', onClick: scrollTo(overdueRef) },
           { label: 'Missing Funding', value: missFunding.length, color: '#d6ac7a', onClick: scrollTo(missFundRef) },
-          { label: 'On Hold', value: onHold.length, color: '#c9b384', onClick: scrollTo(onHoldRef) },
+          { label: 'On Hold', value: onHold.length, color: STATUS_COLORS['On Hold'], onClick: scrollTo(onHoldRef) },
           { label: 'Missing Probability', value: missProb.length, color: '#8ba6c9', onClick: scrollTo(missProbRef) },
           { label: 'Missing BU', value: missBU.length, color: '#d9c9a8', onClick: scrollTo(missBURef) },
         ]}
         otherFlags={[
-          { label: 'On Hold', value: onHold.length, color: '#c9b384', onClick: scrollTo(onHoldRef) },
+          { label: 'On Hold', value: onHold.length, color: STATUS_COLORS['On Hold'], onClick: scrollTo(onHoldRef) },
           { label: 'Missing Probability', value: missProb.length, color: '#8ba6c9', onClick: scrollTo(missProbRef) },
           { label: 'Missing BU', value: missBU.length, color: '#d9c9a8', onClick: scrollTo(missBURef) },
           { label: 'Missing Order #', value: missOrder.length, color: 'var(--pq-strong-text)', onClick: scrollTo(missOrderRef) },
@@ -216,8 +216,8 @@ export function ProjectQuality({ projects, filters, setFilters, filtersSync, tog
             rows={endingSoon.map((p) => ({ ...p, _daysLeft: p.end_date ? daysBetween(new Date(p.end_date), today) : 9999 }))}
             sort={sortES}
             columns={[
-              { label: 'End Date', key: 'end_date', render: (p) => p.end_date, className: (p) => daysUrgencyClass(p._daysLeft) },
-              { label: 'Days Left', key: '_daysLeft', render: (p) => `${p._daysLeft}d${p._daysLeft <= 0 ? ' [OVERDUE]' : ' remaining'}`, className: (p) => daysUrgencyClass(p._daysLeft) },
+              { label: 'End Date', key: 'end_date', render: (p) => p.end_date, className: (p) => endingSoonClass(p._daysLeft) },
+              { label: 'Days Left', key: '_daysLeft', render: (p) => `${p._daysLeft}d remaining`, className: (p) => endingSoonClass(p._daysLeft) },
               { label: 'Project Name', key: 'project_name' },
               { label: 'PM Name', key: 'pm_name' },
               { label: 'BU', key: 'bu' },
@@ -371,11 +371,8 @@ function statusBadge(p: Project) {
   return <span className="badge" style={{ background: STATUS_COLORS[p.project_status] || STATUS_FALLBACK }}>{p.project_status || '—'}</span>;
 }
 
-function daysUrgencyClass(d: number) {
-  if (d < 0) return 'pq-overdue-cell';
-  if (d <= 14) return 'pq-danger-cell';
-  if (d <= 60) return 'pq-warn-cell';
-  return '';
+function endingSoonClass(daysLeft: number) {
+  return daysLeft <= 30 ? 'pq-success-cell' : 'pq-success-cell-light';
 }
 
 interface Column<T> {

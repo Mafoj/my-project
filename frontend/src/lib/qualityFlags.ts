@@ -25,3 +25,14 @@ export function getProjectFlags(p: Project, today: Date): QualityFlag[] {
   if (!p.bso_io.trim() && !p.sales_force.trim()) flags.push({ key: 'missingOrder', label: 'Missing Order #' });
   return flags;
 }
+
+/**
+ * True if `p` ends within the next 60 days (inclusive), same window as the
+ * Project Quality tab's "Ending in Next 60 Days" section. Not a data-quality
+ * flag -- purely informational, so it's kept separate from getProjectFlags.
+ */
+export function isEndingSoon(p: Project, today: Date): boolean {
+  if (!p.end_date) return false;
+  const daysLeft = Math.round((new Date(p.end_date).getTime() - today.getTime()) / DAY_MS);
+  return daysLeft >= 0 && daysLeft <= 60;
+}

@@ -9,7 +9,7 @@ import { FilterBar } from '../components/FilterBar';
 import { STATUS_COLORS, STATUS_FALLBACK, MONTHS, UTILIZATION_WEIGHT, UTIL_PALETTE } from '../lib/constants';
 import { lerpColor } from '../lib/color';
 import { applyMainFilters, usePersistedState, type MainFilters } from '../lib/filters';
-import { getProjectFlags } from '../lib/qualityFlags';
+import { getProjectFlags, isEndingSoon } from '../lib/qualityFlags';
 import { fmtEur } from '../lib/format';
 import type { Project } from '../lib/types';
 
@@ -153,7 +153,11 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
       rowFlags.forEach((r) => r.flags.forEach((f) => flagLabelCounts.set(f.label, (flagLabelCounts.get(f.label) ?? 0) + 1)));
       const flagTooltip = [...flagLabelCounts.entries()].map(([label, n]) => `${n} ${label}`).join(', ');
 
-      return { pm, rows, monthLoad, monthStatusCounts, flaggedCount, flagTooltip };
+      // Projects ending within 60 days -- informational, not a data-quality
+      // issue, so counted and surfaced separately from the flags above.
+      const endingSoonCount = rows.filter((p) => isEndingSoon(p, today)).length;
+
+      return { pm, rows, monthLoad, monthStatusCounts, flaggedCount, flagTooltip, endingSoonCount };
     });
     // Hide PMs with nothing touching the selected year -- browsing to a year
     // where a PM has no work would otherwise leave an empty, misleading row.
@@ -222,7 +226,7 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
             <div className="progress-note">No projects active in {year} match the current filters.</div>
           )}
 
-          {pmData.map(({ pm, rows, monthLoad, monthStatusCounts, flaggedCount, flagTooltip }) => {
+          {pmData.map(({ pm, rows, monthLoad, monthStatusCounts, flaggedCount, flagTooltip, endingSoonCount }) => {
             const isOpen = !!expanded[pm];
             return (
               <div key={pm} className="pmu-pm-block">
@@ -234,6 +238,11 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
                     {flaggedCount > 0 && (
                       <span className="pmu-flag-badge" title={`${flaggedCount} project${flaggedCount !== 1 ? 's' : ''} with data-quality issues: ${flagTooltip}`}>
                         ⚠ {flaggedCount}
+                      </span>
+                    )}
+                    {endingSoonCount > 0 && (
+                      <span className="pmu-ending-badge" title={`${endingSoonCount} project${endingSoonCount !== 1 ? 's' : ''} ending within the next 60 days`}>
+                        ⏳ {endingSoonCount}
                       </span>
                     )}
                   </div>
@@ -266,6 +275,7 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
                 {isOpen && rows.map((p, i) => {
                   const span = monthSpanInYear(p, year);
                   const flags = getProjectFlags(p, today);
+                  const endingSoon = isEndingSoon(p, today);
                   return (
                     <div key={i} className="pmu-row pmu-proj-row">
                       <div
@@ -278,6 +288,13 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
                             title={`Data-quality issues: ${flags.map((f) => f.label).join(', ')}`}
                             onClick={(e) => e.stopPropagation()}
                           >⚠</span>
+                        )}
+                        {endingSoon && (
+                          <span
+                            className="pmu-ending-badge pmu-ending-badge-inline"
+                            title="Ending within the next 60 days"
+                            onClick={(e) => e.stopPropagation()}
+                          >⏳</span>
                         )}
                         {p.project_name || '—'}
                       </div>
@@ -298,6 +315,11 @@ export function Timeline({ projects, filters, setFilters, filtersSync, toggleFil
                               {flags.length > 0 && (
                                 <div className="pmu-cell-tooltip-row pmu-bar-tooltip-flags">
                                   ⚠ {flags.map((f) => f.label).join(', ')}
+                                </div>
+                              )}
+                              {endingSoon && (
+                                <div className="pmu-cell-tooltip-row pmu-bar-tooltip-ending">
+                                  ⏳ Ending within the next 60 days
                                 </div>
                               )}
                             </div>

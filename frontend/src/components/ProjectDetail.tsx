@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import type { Project } from '../lib/types';
 import { fmtEur, fmtPct } from '../lib/format';
 import { STATUS_COLORS, STATUS_FALLBACK } from '../lib/constants';
+import { getProjectFlags, isEndingSoon } from '../lib/qualityFlags';
 
 const OPEN_STATUSES = new Set(['Initiation', 'Starting', 'Ongoing', 'Active', 'Planning']);
 
@@ -29,6 +30,10 @@ export function ProjectDetail({ project, allProjects, onClose }: Props) {
     if (n <= s) return 0;
     return Math.round(((n - s) / (e - s)) * 100);
   }, [project.start_date, project.end_date]);
+
+  const today = useMemo(() => new Date(), []);
+  const flags = useMemo(() => getProjectFlags(project, today), [project, today]);
+  const endingSoon = useMemo(() => isEndingSoon(project, today), [project, today]);
 
   const related = useMemo(() => {
     if (!project.pm_name) return [];
@@ -61,6 +66,14 @@ export function ProjectDetail({ project, allProjects, onClose }: Props) {
             </span>
             {project.bso_io && <span className="drawer-bso">BSO {project.bso_io}</span>}
           </div>
+          {(flags.length > 0 || endingSoon) && (
+            <div className="drawer-flags">
+              {flags.map((f) => (
+                <span key={f.key} className="pmu-flag-badge">⚠ {f.label}</span>
+              ))}
+              {endingSoon && <span className="pmu-ending-badge">⏳ Ending within 60 days</span>}
+            </div>
+          )}
         </div>
 
         <div className="drawer-body">

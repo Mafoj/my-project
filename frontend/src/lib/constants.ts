@@ -8,7 +8,7 @@ export const STATUS_COLORS: Record<string, string> = {
   Ongoing: '#7fb59d', Active: '#7fb59d', Won: '#7fb59d',
   Completed: '#8ba6c9',
   Initiation: '#d6ac7a', Starting: '#d6ac7a', Planning: '#d6ac7a', Pipeline: '#d6ac7a',
-  'On Hold': '#c9b384',
+  'On Hold': '#a998c9',
   Cancelled: '#cf9a92', Lost: '#cf9a92',
 };
 

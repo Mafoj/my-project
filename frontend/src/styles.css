@@ -221,6 +221,12 @@ th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
   border: 1px solid #fcd34d; border-radius: 20px; padding: 1px 7px; cursor: default;
 }
 .pmu-flag-badge-inline { padding: 1px 5px; margin-right: 5px; }
+.pmu-ending-badge {
+  display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0;
+  font-size: 11px; font-weight: 700; color: #059669; background: #d1fae5;
+  border: 1px solid #6ee7b7; border-radius: 20px; padding: 1px 7px; cursor: default;
+}
+.pmu-ending-badge-inline { padding: 1px 5px; margin-right: 5px; }
 .pmu-proj-name-clickable { cursor: pointer; }
 .pmu-proj-name-clickable:hover { color: var(--dhl-red); text-decoration: underline; }
 .pmu-strip { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 1px; height: 12px; min-width: 0; }
@@ -251,6 +257,7 @@ th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 .pmu-bar-tooltip { left: 0; transform: none; text-align: left; max-width: 260px; white-space: normal; }
 .pmu-bar-tooltip::after { left: 16px; transform: none; }
 .pmu-bar-tooltip-flags { color: #fbbf24; margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,.15); }
+.pmu-bar-tooltip-ending { color: #6ee7b7; margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,.15); }
 .pmu-outside { font-size: 11px; color: #c7cad1; }
 
 .pmu-scale-legend { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f1f2f4; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
@@ -297,6 +304,7 @@ th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 .drawer-row-value { font-size: 13.5px; text-align: right; }
 .drawer-row-value.empty { color: #b4b4aa; }
 .drawer-comments { margin: 20px 24px 0; padding: 12px 14px; background: #fbfaf6; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; line-height: 1.6; }
+.drawer-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .drawer-related { margin: 20px 24px 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 .drawer-related-list { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .drawer-related-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 12.5px; }
@@ -356,9 +364,8 @@ th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 .pq-heatmap-wrap { margin-bottom: 20px; overflow-x: auto; }
 .pq-table-wrap { max-height: 340px; }
 .pq-danger-cell { color: #dc2626; font-weight: 600; }
-.pq-overdue-cell { color: #7c3aed; font-weight: 600; }
-.pq-warn-cell { color: #f59e0b; font-weight: 600; }
 .pq-success-cell { color: #10b981; font-weight: 600; }
+.pq-success-cell-light { color: #34d399; font-weight: 600; }
 .pq-muted-cell { color: #94a3b8; font-style: italic; }
 
 /* ── Versioning tab ──────────────────────────────────────────────────── */
@@ -394,6 +401,7 @@ th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 [data-theme="dark"] .pmu-pm-row:hover { background: #23262e; }
 [data-theme="dark"] .pmu-proj-row .pmu-label-col { color: #c3c8d1; }
 [data-theme="dark"] .pmu-flag-badge { color: #fcd34d; background: #3a3220; border-color: #5c4a1f; }
+[data-theme="dark"] .pmu-ending-badge { color: #6ee7b7; background: #1f3a2e; border-color: #2f6b4f; }
 [data-theme="dark"] .drawer-comments { background: #23262e; }
 [data-theme="dark"] .alert-warn { background: #332b12; border-color: #5c4a1f; color: #fcd34d; }
 [data-theme="dark"] .alert-red { background: #3a1f1f; border-color: #7a3a3a; color: #f5a3a3; }
